@@ -19,6 +19,8 @@ domeos/agent
 
 6 修正连接多个transfer时crash问题
 
+7 为支持DomeOS v0.3提供的报警功能，启动参数中需开启heartbeat server，并配置heartbeat server地址。(若不需报警功能也可不开启heartbeat server，将启动参数中HEARTBEAT_ENABLED设置为false)
+
 ## Notice
 
 domeos/agent模块是以open-falcon原生agent模块为基础，为适应DomeOS监控报警需求而设计修改的，包名已修改为github.com/domeos/agent，与原生open-falcon的agent主要区别为：
