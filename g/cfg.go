@@ -43,6 +43,8 @@ type GlobalConfig struct {
 	Debug         bool             `json:"debug"`
 	Hostname      string           `json:"hostname"`
 	IP            string           `json:"ip"`
+	CadvisorPort  string           `json:"cadvisorPort"`
+	Apiserver     string           `json:"apiserver"`
 	Plugin        *PluginConfig    `json:"plugin"`
 	Heartbeat     *HeartbeatConfig `json:"heartbeat"`
 	Transfer      *TransferConfig  `json:"transfer"`
@@ -83,8 +85,8 @@ func IP() string {
 		return ip
 	}
 
-	if len(LocalIps) > 0 {
-		ip = LocalIps[0]
+	if len(LocalIp) > 0 {
+		ip = LocalIp
 	}
 
 	return ip

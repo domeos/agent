@@ -2,6 +2,8 @@
     "debug": true,
     "hostname": {{ default .Env.HOSTNAME "\"\"" }},
     "ip": {{ default .Env.IP "\"\"" }},
+    "cadvisorPort": {{ default .Env.CADVISORPORT "\"4194\""}},
+    "apiserver": {{ default .Env.APISERVER "\"\""}},
     "plugin": {
         "enabled": {{ default .Env.PLUGIN_ENABLED "false" }},
         "dir": {{ default .Env.PLUGIN_DIR "\"./plugin\"" }},

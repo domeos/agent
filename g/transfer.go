@@ -28,7 +28,7 @@ func SendMetrics(metrics []*model.MetricValue, resp *model.TransferResponse) {
 }
 
 func initTransferClient(addr string) {
-        TransferClientsLock.Lock()
+	TransferClientsLock.Lock()
 	defer TransferClientsLock.Unlock()
 	TransferClients[addr] = &SingleConnRpcClient{
 		RpcServer: addr,

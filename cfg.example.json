@@ -2,6 +2,7 @@
     "debug": true,
     "hostname": "",
     "ip": "",
+    "cadvisorPort": "4194",
     "plugin": {
         "enabled": false,
         "dir": "./plugin",

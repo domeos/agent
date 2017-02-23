@@ -1,17 +1,20 @@
 package cron
 
 import (
+	"time"
+
 	"github.com/domeos/agent/funcs"
 	"github.com/domeos/agent/g"
 	"github.com/open-falcon/common/model"
-	"time"
 )
 
 func InitDataHistory() {
 	for {
 		funcs.UpdateCpuStat()
 		funcs.UpdateDiskStats()
-                funcs.UpdateContainerStat()
+		// kairen add for container and k8s state
+		funcs.UpdateContainerStat()
+		// funcs.UpdateK8sStat()
 		time.Sleep(g.COLLECT_INTERVAL)
 	}
 }
@@ -32,7 +35,7 @@ func Collect() {
 }
 
 func collect(sec int64, fns []func() []*model.MetricValue) {
-	
+
 	t := time.NewTicker(time.Second * time.Duration(sec)).C
 
 	for {

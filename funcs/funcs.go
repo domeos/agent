@@ -6,8 +6,8 @@ import (
 )
 
 type FuncsAndInterval struct {
-	Fs              []func() []*model.MetricValue
-	Interval        int
+	Fs       []func() []*model.MetricValue
+	Interval int
 }
 
 var Mappers []FuncsAndInterval
@@ -56,11 +56,18 @@ func BuildMappers() {
 			},
 			Interval: interval,
 		},
-                FuncsAndInterval{
-                        Fs: []func() []*model.MetricValue{
-                                ContainerMetrics,
-                        },
-                        Interval: interval,
-                },
+		//container and k8s monitor
+		FuncsAndInterval{
+			Fs: []func() []*model.MetricValue{
+				ContainerMetrics,
+			},
+			Interval: interval,
+		},
+		// FuncsAndInterval{
+		// 	Fs: []func() []*model.MetricValue{
+		// 		K8sMetrics,
+		// 	},
+		// 	Interval: interval,
+		// },
 	}
 }

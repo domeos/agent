@@ -3,33 +3,32 @@ domeos/agent
 
 更新说明：
 
-2016.06.03
-
-镜像地址：pub.domeos.org/domeos/agent:2.5
+2016.05.09
 
 1 升级cadvisor，以支持新版docker，实测docker1.11.1下可正常上报数据
 
-2 容器运行agent时，修正dockerConnector导致宿主机docker exec进程残留问题
+2 Dockerfile更新：使用docker:1.11.1基础镜像
 
-3 基础镜像修改为docker:1.8，并修正时区，减少了容器启动的挂载目录
+2016.06.01
 
-4 重新编译dockerConnector与falcon-agent，去掉cgo依赖(对cadvisor和prometheus源码稍作了修改，不影响agent使用)
+发布镜像地址：pub.domeos.org/domeos/agent:2.5
 
-5 修正容器内存limit为0时内存使用率NaN问题
+1 容器运行agent时，修正dockerConnector导致宿主机docker exec进程残留问题
 
-6 修正连接多个transfer时crash问题
+2 为保持兼容性，将基础镜像修改为docker:1.8，并修正时区
 
-7 为支持DomeOS v0.3提供的报警功能，启动参数中需开启heartbeat server，并配置heartbeat server地址。(若不需报警功能也可不开启heartbeat server，将启动参数中HEARTBEAT_ENABLED设置为false)
+3 重新编译dockerConnector与falcon-agent，去掉cgo依赖(对cadvisor和prometheus源码稍作了修改，不影响agent使用)
+
+4 修正容器内存limit为0时内存使用率NaN问题
+
+5 修正连接多个transfer时crash问题
 
 ## Notice
 
 domeos/agent模块是以open-falcon原生agent模块为基础，为适应DomeOS监控报警需求而设计修改的，包名已修改为github.com/domeos/agent，与原生open-falcon的agent主要区别为：
 
 - 在配置模板中对很大部分监控项设置了忽略，仅保留一些系统基础监控项
-- 嵌入了cadvisor代码，实现容器监控，其tag为id={容器64位id}
-- 镜像中集成了DomeOS WebSSH客户端，默认监听2222端口上的SSH请求，配合WebSSH Server实现Web端容器登录
-
-domeos/agent模块需在集群中所有node节点部署。若使用DomeOS给定的脚本添加主机，且指定--start-agent参数为true，默认将自动启动agent容器；否则需要手动启动agent容器。
+- 嵌入了cadvisor代码，实现容器监控，其tag为id=<container long id>
 
 ## Installation
 
@@ -51,7 +50,7 @@ go get ./...
 ## Configuration
 
 - heartbeat: 心跳服务器地址
-- transfer: transfer地址，可以配置多个
+- transfer: transfer地址，现在可以配置多个
 - ignore: 忽略(不上报)的监控项
 
 ## Run In Docker Container
@@ -110,10 +109,6 @@ sudo docker run -d --restart=always \
 	--name agent \
 	domeos/agent:latest
 ```
-
-验证：
-
-通过curl -s localhost:<_agent_http_port>/health命令查看运行状态，若运行正常将返回ok。
 
 
 DomeOS仓库中domeos/agent对应版本： pub.domeos.org/domeos/agent:2.5

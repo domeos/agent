@@ -4,7 +4,10 @@ MAINTAINER domeos
 
 # Prepare
 
-RUN apk add --no-cache bash && mkdir -p /opt/falcon-agent && cd /opt/falcon-agent
+RUN apk add --no-cache bash supervisor
+
+
+RUN mkdir -p /opt/falcon-agent/logs && cd /opt/falcon-agent
 
 # Set work-dir
 
@@ -17,9 +20,10 @@ COPY control ./control
 COPY cfg.template.json ./cfg.template.json
 COPY dockerConnector ./dockerConnector
 
-# Copy start script
+# Copy agent ini
 
-COPY run.sh ./run.sh
+COPY agent-supervisor.ini  /etc/supervisor.d/agent-supervisor.ini
+COPY dockerConnector-supervisor.ini /etc/supervisor.d/dockerConnector.ini
  
 # Copy dockerize
 
@@ -31,5 +35,4 @@ COPY Shanghai /etc/localtime
 
 # Start service
 
-CMD dockerize -template ./cfg.template.json:./cfg.json sh run.sh
-
+CMD dockerize -template ./cfg.template.json:./cfg.json supervisord -n

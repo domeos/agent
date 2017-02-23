@@ -1,16 +1,19 @@
 package g
 
 import (
-	"github.com/open-falcon/common/model"
-	"github.com/toolkits/net"
-	"github.com/toolkits/slice"
-        "github.com/google/cadvisor/manager"
-	info "github.com/google/cadvisor/info/v1"
 	"log"
 	"os"
 	"strings"
 	"sync"
 	"time"
+	"net"
+
+	"github.com/google/cadvisor/client"
+	info "github.com/google/cadvisor/info/v1"
+	"github.com/open-falcon/common/model"
+	"github.com/prometheus/client_golang/prometheus"
+	dto "github.com/prometheus/client_model/go"
+	"github.com/toolkits/slice"
 )
 
 var Root string
@@ -23,18 +26,24 @@ func InitRootDir() {
 	}
 }
 
-var LocalIps []string
+var LocalIp string
 
-func InitLocalIps() {
-	var err error
-	LocalIps, err = net.IntranetIP()
-	if err != nil {
-		log.Fatalln("get intranet ip fail:", err)
+func InitLocalIp() {
+        if Config().Heartbeat.Enabled {
+		conn, err := net.DialTimeout("tcp",Config().Heartbeat.Addr,time.Second*10)
+		if err != nil {
+			log.Println("get local addr failed !")
+		}else{
+			LocalIp = strings.Split(conn.LocalAddr().String(),":")[0]
+			conn.Close()
+		}
+	}else{
+		log.Println("hearbeat is not enabled, can't get localip")
 	}
 }
 
 var (
-	HbsClient       *SingleConnRpcClient
+	HbsClient *SingleConnRpcClient
 )
 
 func InitRpcClients() {
@@ -170,51 +179,77 @@ func IsTrustable(remoteAddr string) bool {
 }
 
 var (
-        currentContainers []string
-        currentContainersLock = new(sync.RWMutex)
+	currentContainers     []string
+	currentContainersLock = new(sync.RWMutex)
 )
 
 func CurrentContainers() []string {
-        currentContainersLock.RLock()
-        defer currentContainersLock.RUnlock()
-        return currentContainers
+	currentContainersLock.RLock()
+	defer currentContainersLock.RUnlock()
+	return currentContainers
 }
 
 func SetCurrentContainers(containers []string) {
-        currentContainersLock.Lock()
-        defer currentContainersLock.Unlock()
-        currentContainers = containers
+	currentContainersLock.Lock()
+	defer currentContainersLock.Unlock()
+	currentContainers = containers
 }
 
 func UpdateCurrentContainers() {
-	reqParams := &info.ContainerInfoRequest{
-		NumStats: 1,
+	query := &info.ContainerInfoRequest{
+		NumStats: 3,
 	}
-        dockerContainers, err := ContainerManager().AllDockerContainers(reqParams)
-        if err != nil {
-                log.Println("Get docker containers error : %s", err.Error())
-                return;
-        }
-        containers := make([]string, 0)
-        for _, container := range dockerContainers {
-                containers = append(containers, container.Id)
-        }
-        SetCurrentContainers(containers)
+	dockerContainers, err := GetCotainerClient().AllDockerContainers(query)
+	if err != nil {
+		log.Println("Get docker containers error : %s", err.Error())
+		return
+	}
+	containers := make([]string, 0)
+	for _, container := range dockerContainers {
+		containers = append(containers, container.Id)
+	}
+	SetCurrentContainers(containers)
 }
 
 var (
-        containerManager manager.Manager
-        containerManagerLock = new(sync.RWMutex)
+	cadvisorClient *client.Client
+	clientLock     = new(sync.RWMutex)
 )
 
-func ContainerManager() manager.Manager {
-        containerManagerLock.RLock()
-        defer containerManagerLock.RUnlock()
-        return containerManager
+func GetCotainerClient() *client.Client {
+	clientLock.RLock()
+	defer clientLock.RUnlock()
+	return cadvisorClient
 }
 
-func SetContainerManager(setManager manager.Manager) {
-        containerManagerLock.Lock()
-        defer containerManagerLock.Unlock()
-        containerManager = setManager
+func SetContainerClient(setClient *client.Client) {
+	clientLock.Lock()
+	defer clientLock.Unlock()
+	cadvisorClient = setClient
+}
+
+var (
+	k8sStat     []*dto.MetricFamily
+	k8sStatLock = new(sync.RWMutex)
+)
+
+func GetK8sStat() []*dto.MetricFamily {
+	k8sStatLock.RLock()
+	defer k8sStatLock.RUnlock()
+	return k8sStat
+}
+
+func SetK8sStat(setK8sStat []*dto.MetricFamily) {
+	k8sStatLock.Lock()
+	defer k8sStatLock.Unlock()
+	k8sStat = setK8sStat
+}
+
+func UpdateK8sStat() {
+	mfs, err := prometheus.DefaultGatherer.Gather()
+	if err != nil {
+		log.Println("Get kubernetes info err : %s", err.Error())
+	} else {
+		SetK8sStat(mfs)
+	}
 }
